@@ -1,0 +1,15 @@
+version: '3'
+services:
+  recipe-db:
+    image: "postgres"
+    container_name: "recipe_db"
+    environment:
+      - POSTGRES_PASSWORD=test
+      - POSTGRES_DB=recipes
+      - POSTGRES_USER=recipe
+    ports:
+      - "5432:5432"
+    volumes:
+      - recipe-db_data:/var/lib/postgresql/data
+volumes:
+  recipe-db_data:
