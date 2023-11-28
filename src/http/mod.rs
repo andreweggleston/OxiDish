@@ -5,10 +5,11 @@ mod error;
 mod recipes;
 mod ingredients;
 
-use std::net::{Ipv4Addr, SocketAddr};
 use crate::config::Config;
+
 use std::sync::Arc;
 use anyhow::Context;
+use tokio::net::TcpListener;
 use axum::Router;
 use sqlx::PgPool;
 
@@ -45,9 +46,9 @@ pub async fn serve(config: Config, db: PgPool) -> anyhow::Result<()> {
 
     let app = api_router(api_context);
 
-    let addr = SocketAddr::from((Ipv4Addr::UNSPECIFIED, 8000));
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
+    let listener = TcpListener::bind("0.0.0.0:8000").await.unwrap();
+
+    axum::serve(listener, app)
         .await
         .context("error running http server")
 }
