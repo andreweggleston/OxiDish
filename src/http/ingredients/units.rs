@@ -7,7 +7,7 @@ use crate::models::IngredientUnit;
 
 pub fn router() -> Router<ApiContext> {
     Router::new()
-        .route("/api/ingredients/unitss", get(list_ingredient_units).post(create_unit))
+        .route("/api/ingredients/units", get(list_ingredient_units).post(create_unit))
 }
 
 #[derive(serde::Serialize)]
