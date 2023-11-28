@@ -50,16 +50,36 @@ async fn list_recipes(
     ctx: State<ApiContext>,
     query: Query<ListRecipesQuery>,
 ) -> Result<Json<MultipleRecipesBody>> {
-    let recipes: Vec<Recipe> = sqlx::query_as(
+    let mut builder = sqlx::QueryBuilder::new(
         r#"
-        SELECT recipes.id, recipes.title, recipes.description
-        FROM recipes
-        INNER JOIN recipe_ingredients
-        ON recipes.id = recipe_ingredients.id_recipe
-        WHERE recipe_ingredients.id_ingredient_name IN $1
-        UNIQUE
+        SELECT r.id, r.title, r.description
+        FROM recipes r
         "#
-    ).bind(&query.ingredient_name_ids).fetch_all(&ctx.db).await?;
+    );
+
+    match &query.ingredient_name_ids {
+        None => {}
+        Some(query_ingredients_ids) => {
+            builder.push(
+                r#"
+                JOIN recipe_ingredients ri ON r.id = ri.id_recipe
+                WHERE ri.id_ingredient_name IN (
+                "#
+            );
+            let mut ingredients_separated_builder = builder.separated(", ");
+            for ingredient_id in query_ingredients_ids {
+                ingredients_separated_builder.push_bind(ingredient_id);
+            }
+            ingredients_separated_builder.push_unseparated(") ");
+            builder.push(r#"
+                GROUP BY r.id
+                ORDER BY COUNT(DISTINCT ri.id_ingredient_name) DESC
+            "#);
+        }
+    }
+
+    let recipes = builder.build_query_as().fetch_all(&ctx.db).await?;
+
 
     Ok(
         Json(
