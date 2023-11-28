@@ -112,9 +112,9 @@ async fn create_recipe(
 impl From<RecipeIngredient> for RecipeIngredientDTO {
     fn from(ingredient: RecipeIngredient) -> Self {
         RecipeIngredientDTO {
-            id_ingredient_name: ingredient.id_name,
-            id_ingredient_quantity: ingredient.id_quantity,
-            id_ingredient_unit: ingredient.id_unit,
+            id_ingredient_name: ingredient.id_ingredient_name,
+            id_ingredient_quantity: ingredient.id_ingredient_quantity,
+            id_ingredient_unit: ingredient.id_ingredient_unit,
         }
     }
 }

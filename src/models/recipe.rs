@@ -7,10 +7,10 @@ pub struct Recipe {
 
 #[derive(sqlx::FromRow)]
 pub struct RecipeIngredient {
-    pub id: i32,
-    pub id_quantity: i32,
-    pub id_unit: i32,
-    pub id_name: i32,
+    pub id_recipe: i32,
+    pub id_ingredient_name: i32,
+    pub id_ingredient_unit: i32,
+    pub id_ingredient_quantity: i32,
 }
 
 #[derive(sqlx::FromRow, serde::Serialize, serde::Deserialize)]
