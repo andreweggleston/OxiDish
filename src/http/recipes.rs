@@ -1,8 +1,8 @@
 use axum::{Json, Router};
-use axum::extract::{Query, State};
+use axum::extract::{Path, Query, State};
 use axum::routing::get;
 
-use crate::http::{ApiContext, Result};
+use crate::http::{ApiContext, Error, Result};
 use crate::models::{Recipe, RecipeIngredient};
 
 
@@ -43,6 +43,7 @@ pub fn router() -> Router<ApiContext> {
     Router::new()
         .route("/api/recipes",
                get(list_recipes).post(create_recipe))
+        .route("/api/recipes/:recipe_id", get(show_recipe).put(update_recipe))
 }
 
 async fn list_recipes(
@@ -107,6 +108,74 @@ async fn create_recipe(
             }
         )
     )
+}
+
+async fn show_recipe(
+    ctx: State<ApiContext>,
+    Path(recipe_id): Path<i32>,
+) -> Result<Json<RecipeDTO>> {
+    let recipe = sqlx::query_as!(Recipe, r#"
+        SELECT * FROM recipes WHERE id = $1
+    "#, recipe_id).fetch_one(&ctx.db).await?;
+
+    let ingredient_dtos = sqlx::query_as!(RecipeIngredient, r#"
+        SELECT * FROM recipe_ingredients WHERE id_recipe = $1
+    "#, recipe_id).fetch_all(&ctx.db).await?;
+
+    Ok(
+        Json(
+            RecipeDTO {
+                id: recipe.id,
+                title: recipe.title,
+                description: recipe.description,
+                ingredients: ingredient_dtos.into_iter().map(|ingredient| ingredient.into()).collect(),
+            }
+        )
+    )
+}
+
+async fn update_recipe(
+    ctx: State<ApiContext>,
+    Path(recipe_id): Path<i32>,
+    Json(req): Json<RecipeDTO>,
+) -> Result<Json<RecipeDTO>> {
+    // first sanity check that the user is submitting a recipe for this path
+    if req.id != recipe_id {
+        Err(Error::unprocessable_entity([("id", "id of updated recipe dto does not match id in path")]))
+    } else {
+        let recipe = sqlx::query_as!(Recipe, r#"
+            UPDATE recipes
+            SET title = $1, description = $2
+            WHERE id = $3
+            RETURNING id, title, description
+        "#, req.title, req.description, req.id).fetch_one(&ctx.db).await?;
+        let mut builder
+            = sqlx::QueryBuilder::new(
+            "DELETE FROM recipe_ingredients WHERE id_recipe = $1;"
+        );
+        builder.push_bind(recipe_id);
+        builder.push(
+            "INSERT INTO recipe_ingredients (id_recipe, id_ingredient_name, id_ingredient_unit, id_ingredient_quantity) ");
+        builder.push_values(req.ingredients, |mut b, ingredient| {
+            b
+                .push_bind(req.id)
+                .push_bind(ingredient.id_ingredient_name)
+                .push_bind(ingredient.id_ingredient_unit)
+                .push_bind(ingredient.id_ingredient_quantity);
+        });
+        let ingredient_dtos = builder.build_query_as().fetch_all(&ctx.db).await?;
+
+        Ok(
+            Json(
+                RecipeDTO {
+                    id: recipe.id,
+                    title: recipe.title,
+                    description: recipe.description,
+                    ingredients: ingredient_dtos.into_iter().map(|ingredient: RecipeIngredient| ingredient.into()).collect(),
+                }
+            )
+        )
+    }
 }
 
 impl From<RecipeIngredient> for RecipeIngredientDTO {
