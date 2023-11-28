@@ -42,7 +42,7 @@ async fn create_quantity(
 ) -> Result<Json<IngredientQuantity>> {
     let ingredient_quantity = sqlx::query_as(
         r#"
-        INSERT INTO ingredient_quantities (quantity) VALUES ($1)
+        INSERT INTO ingredient_quantities (quantity) VALUES ($1) RETURNING id, quantity
         "#
     )
         .bind(req.quantity)

@@ -43,7 +43,7 @@ async fn create_unit(
 ) -> Result<Json<IngredientUnit>> {
     let ingredient_unit = sqlx::query_as(
         r#"
-        INSERT INTO ingredient_units (unit, truncation) VALUES ($1, $2)
+        INSERT INTO ingredient_units (unit, truncation) VALUES ($1, $2) RETURNING id, unit, truncation
         "#
     )
         .bind(req.unit).bind(req.truncation)
