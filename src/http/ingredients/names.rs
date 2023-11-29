@@ -1,8 +1,9 @@
 use axum::{Json, Router};
 use axum::extract::State;
+use axum::http::StatusCode;
 use axum::routing::get;
 
-use crate::http::{ApiContext, Error, Result, ResultExt};
+use crate::http::{ApiContext, Error, OxiDishResult, ResultExt};
 use crate::models::IngredientName;
 
 pub fn router() -> Router<ApiContext> {
@@ -17,18 +18,21 @@ struct MultipleNamesBody {
 
 async fn list_ingredient_names(
     ctx: State<ApiContext>
-) -> Result<Json<MultipleNamesBody>> {
-    let ingredient_names = sqlx::query_as(
+) -> OxiDishResult<Json<MultipleNamesBody>> {
+    let query_result = sqlx::query_as(
         "SELECT * FROM ingredient_names"
-    ).fetch_all(&ctx.db).await?;
+    ).fetch_all(&ctx.db).await;
 
-    Ok(
-        Json(
-            MultipleNamesBody {
-                names: ingredient_names
-            }
-        )
-    )
+    match query_result {
+        Ok(ingredient_names) => {
+            OxiDishResult::Ok(StatusCode::OK,
+                              Json(MultipleNamesBody { names: ingredient_names }),
+            )
+        }
+        Err(err) => {
+            OxiDishResult::Err(err.into())
+        }
+    }
 }
 
 #[derive(serde::Deserialize)]
@@ -39,8 +43,8 @@ struct NewIngredientName {
 async fn create_name(
     ctx: State<ApiContext>,
     Json(req): Json<NewIngredientName>,
-) -> Result<Json<IngredientName>> {
-    let ingredient_name = sqlx::query_as(
+) -> OxiDishResult<Json<IngredientName>> {
+    let query_result = sqlx::query_as(
         r#"
         INSERT INTO ingredient_names (name) VALUES ($1) RETURNING id, name
         "#
@@ -51,11 +55,15 @@ async fn create_name(
                        |_| {
                            Error::unprocessable_entity([("name", "ingredient name already exists")])
                        },
-        )?;
+        );
 
-    Ok(
-        Json(
-            ingredient_name
-        )
-    )
+    match query_result {
+        Ok(ingredient_name) => {
+            OxiDishResult::Ok(
+                StatusCode::CREATED,
+                Json(ingredient_name),
+            )
+        }
+        Err(err) => OxiDishResult::Err(err)
+    }
 }

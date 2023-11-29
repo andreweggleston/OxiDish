@@ -9,6 +9,8 @@ use crate::config::Config;
 
 use std::sync::Arc;
 use anyhow::Context;
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
 use tokio::net::TcpListener;
 use axum::Router;
 use sqlx::PgPool;
@@ -16,6 +18,26 @@ use sqlx::PgPool;
 pub use error::{Error, ResultExt};
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
+
+pub enum OxiDishResult<T, S = StatusCode, E = Error> {
+    Ok(S, T),
+    Err(E)
+}
+
+impl<T> IntoResponse for OxiDishResult<T> where T: IntoResponse{
+    fn into_response(self) -> Response {
+        match self {
+            OxiDishResult::Ok(status_code, value) => {
+                let mut response = value.into_response();
+                *response.status_mut() = status_code;
+                response
+            }
+            OxiDishResult::Err(err) => {
+                err.into_response()
+            }
+        }
+    }
+}
 
 use tower_http::trace::TraceLayer;
 
