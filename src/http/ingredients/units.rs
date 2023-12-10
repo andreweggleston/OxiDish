@@ -1,8 +1,9 @@
 use axum::{Json, Router};
 use axum::extract::State;
+use axum::http::StatusCode;
 use axum::routing::get;
 
-use crate::http::{ApiContext, Error, Result, ResultExt};
+use crate::http::{ApiContext, Error, OxiDishResult, ResultExt};
 use crate::models::IngredientUnit;
 
 pub fn router() -> Router<ApiContext> {
@@ -17,18 +18,24 @@ struct MultipleUnitsBody {
 
 async fn list_ingredient_units(
     ctx: State<ApiContext>
-) -> Result<Json<MultipleUnitsBody>> {
-    let ingredient_units = sqlx::query_as(
+) -> OxiDishResult<Json<MultipleUnitsBody>> {
+    let ingredient_units_result = sqlx::query_as(
         "SELECT * FROM ingredient_units"
-    ).fetch_all(&ctx.db).await?;
+    ).fetch_all(&ctx.db).await;
 
-    Ok(
-        Json(
-            MultipleUnitsBody {
-                units: ingredient_units
-            }
-        )
-    )
+    match ingredient_units_result {
+        Ok(ingredient_units) => {
+            OxiDishResult::Ok(
+                StatusCode::OK,
+                Json(
+                    MultipleUnitsBody {
+                        units: ingredient_units
+                    }
+                )
+            )
+        }
+        Err(err) => OxiDishResult::Err(err.into())
+    }
 }
 
 #[derive(serde::Deserialize)]
@@ -40,8 +47,8 @@ struct NewIngredientUnit {
 async fn create_unit(
     ctx: State<ApiContext>,
     Json(req): Json<NewIngredientUnit>,
-) -> Result<Json<IngredientUnit>> {
-    let ingredient_unit = sqlx::query_as(
+) -> OxiDishResult<Json<IngredientUnit>> {
+    let ingredient_unit_result = sqlx::query_as(
         r#"
         INSERT INTO ingredient_units (unit, truncation) VALUES ($1, $2) RETURNING id, unit, truncation
         "#
@@ -52,11 +59,15 @@ async fn create_unit(
                        |_| {
                            Error::unprocessable_entity([("quantity", "ingredient quantity already exists")])
                        },
-        )?;
+        );
 
-    Ok(
-        Json(
-            ingredient_unit
-        )
-    )
+    match ingredient_unit_result {
+        Ok(ingredient_unit) => {
+            OxiDishResult::Ok(
+                StatusCode::CREATED,
+                Json(ingredient_unit)
+            )
+        }
+        Err(err) => OxiDishResult::Err(err)
+    }
 }

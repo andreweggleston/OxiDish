@@ -1,8 +1,9 @@
 use axum::{Json, Router};
 use axum::extract::State;
+use axum::http::StatusCode;
 use axum::routing::get;
 
-use crate::http::{ApiContext, Error, Result, ResultExt};
+use crate::http::{ApiContext, Error, OxiDishResult, ResultExt};
 use crate::models::IngredientQuantity;
 
 pub fn router() -> Router<ApiContext> {
@@ -17,18 +18,24 @@ struct MultipleQuantitiesBody {
 
 async fn list_ingredient_quantities(
     ctx: State<ApiContext>
-) -> Result<Json<MultipleQuantitiesBody>> {
-    let ingredient_quantities = sqlx::query_as(
+) -> OxiDishResult<Json<MultipleQuantitiesBody>> {
+    let ingredient_quantities_result = sqlx::query_as(
         "SELECT * FROM ingredient_quantities"
-    ).fetch_all(&ctx.db).await?;
+    ).fetch_all(&ctx.db).await;
 
-    Ok(
-        Json(
-            MultipleQuantitiesBody {
-                quantities: ingredient_quantities
-            }
-        )
-    )
+    match ingredient_quantities_result {
+        Ok(ingredient_quantities) => {
+            OxiDishResult::Ok(
+                StatusCode::OK,
+                Json(MultipleQuantitiesBody {
+                    quantities: ingredient_quantities,
+                })
+            )
+        }
+        Err(err) => {
+            OxiDishResult::Err(err.into())
+        }
+    }
 }
 
 #[derive(serde::Deserialize)]
@@ -39,8 +46,8 @@ struct NewIngredientQuantity {
 async fn create_quantity(
     ctx: State<ApiContext>,
     Json(req): Json<NewIngredientQuantity>,
-) -> Result<Json<IngredientQuantity>> {
-    let ingredient_quantity = sqlx::query_as(
+) -> OxiDishResult<Json<IngredientQuantity>> {
+    let ingredient_quantity_result = sqlx::query_as(
         r#"
         INSERT INTO ingredient_quantities (quantity) VALUES ($1) RETURNING id, quantity
         "#
@@ -51,11 +58,12 @@ async fn create_quantity(
                        |_| {
                            Error::unprocessable_entity([("quantity", "ingredient quantity already exists")])
                        },
-        )?;
+        );
 
-    Ok(
-        Json(
-            ingredient_quantity
-        )
-    )
+    match ingredient_quantity_result {
+        Ok(ingredient_quantity) => {
+            OxiDishResult::Ok(StatusCode::CREATED, Json(ingredient_quantity))
+        }
+        Err(err) => OxiDishResult::Err(err)
+    }
 }
