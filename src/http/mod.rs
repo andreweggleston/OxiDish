@@ -56,8 +56,8 @@ use tower_http::trace::TraceLayer;
 /// judgement call.
 #[derive(Clone)]
 pub struct ApiContext {
-    config: Arc<Config>,
-    db: PgPool,
+    pub config: Arc<Config>,
+    pub db: PgPool,
 }
 
 pub async fn serve(config: Config, db: PgPool) -> anyhow::Result<()> {
@@ -75,7 +75,7 @@ pub async fn serve(config: Config, db: PgPool) -> anyhow::Result<()> {
         .context("error running http server")
 }
 
-fn api_router(api_context: ApiContext) -> Router {
+pub fn api_router(api_context: ApiContext) -> Router {
     // This is the order that the modules were authored in.
     Router::new()
         .merge(recipes::router())
