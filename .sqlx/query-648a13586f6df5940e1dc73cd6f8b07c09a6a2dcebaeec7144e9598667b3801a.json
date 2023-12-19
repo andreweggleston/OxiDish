@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT * FROM recipe_ingredients WHERE id_recipe = $1\n    ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id_recipe",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 1,
+        "name": "id_ingredient_name",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "id_ingredient_unit",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 3,
+        "name": "id_ingredient_quantity",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "648a13586f6df5940e1dc73cd6f8b07c09a6a2dcebaeec7144e9598667b3801a"
+}
