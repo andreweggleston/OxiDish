@@ -108,7 +108,7 @@ async fn test_create_ingredient_name(db: PgPool) -> Result<(), Error>{
 }
 
 #[sqlx::test]
-async fn test_create_two_ingredients_with_same_name(db: PgPool) -> Result<(), Error>{
+async fn test_create_two_identical_ingredient_names(db: PgPool) -> Result<(), Error>{
     let mut app = OxiDish::http::api_router(ApiContext {
         config: Arc::new(Config { database_url: "unused".to_string() }),
         db,
