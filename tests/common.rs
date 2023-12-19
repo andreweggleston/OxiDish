@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 #![feature(async_fn_track_caller)]
 
-use axum::body::{Body};
+use axum::body::Body;
 use axum::http::header::CONTENT_TYPE;
 use axum::http::{request, Request};
 use axum::response::Response;

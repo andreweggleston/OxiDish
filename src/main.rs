@@ -5,8 +5,7 @@ use anyhow::Context;
 use OxiDish::http;
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()>{
-
+async fn main() -> anyhow::Result<()> {
     // Parse our configuration from the environment.
     // This will exit with a help message if something is wrong.
     let config = Config::parse();

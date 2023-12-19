@@ -1,3 +1,5 @@
 mod recipe;
 
-pub(crate) use recipe::{Recipe, RecipeIngredient, IngredientName, IngredientUnit, IngredientQuantity};
+pub(crate) use recipe::{
+    IngredientName, IngredientQuantity, IngredientUnit, Recipe, RecipeIngredient,
+};

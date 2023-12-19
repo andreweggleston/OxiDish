@@ -83,9 +83,9 @@ impl Error {
     ///
     /// Try "Go to Usage" in an IDE for examples.
     pub fn unprocessable_entity<K, V>(errors: impl IntoIterator<Item = (K, V)>) -> Self
-        where
-            K: Into<Cow<'static, str>>,
-            V: Into<Cow<'static, str>>,
+    where
+        K: Into<Cow<'static, str>>,
+        V: Into<Cow<'static, str>>,
     {
         let mut error_map = HashMap::new();
 
@@ -198,8 +198,8 @@ pub trait ResultExt<T> {
 }
 
 impl<T, E> ResultExt<T> for Result<T, E>
-    where
-        E: Into<Error>,
+where
+    E: Into<Error>,
 {
     fn on_constraint(
         self,

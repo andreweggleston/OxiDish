@@ -2,8 +2,8 @@ mod names;
 mod quantities;
 mod units;
 
-use axum::Router;
 use crate::http::ApiContext;
+use axum::Router;
 
 pub fn router() -> Router<ApiContext> {
     Router::new()
