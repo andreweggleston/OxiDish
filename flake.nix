@@ -37,6 +37,7 @@
           buildInputs = [
             rust-toolchain
             pkgs.postgresql
+            pkgs.sqlx-cli
           ];
 
           shellHook = ''
