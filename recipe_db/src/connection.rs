@@ -1,4 +1,4 @@
-use sqlx::{PgPool, Pool, Postgres};
+use sqlx::PgPool;
 
 pub struct Database {
     pool: PgPool,
