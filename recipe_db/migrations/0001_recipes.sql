@@ -9,31 +9,12 @@ CREATE TABLE IF NOT EXISTS public.ingredient_names
     UNIQUE(name)
     );
 
-CREATE TABLE IF NOT EXISTS public.ingredient_quantities
-(
-    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-    quantity character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    CONSTRAINT ingredient_quantities_pkey PRIMARY KEY (id),
-    UNIQUE(quantity)
-    );
-
-CREATE TABLE IF NOT EXISTS public.ingredient_units
-(
-    id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-    unit character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    truncation character varying(8) COLLATE pg_catalog."default" NOT NULL,
-    CONSTRAINT ingredient_units_pkey PRIMARY KEY (id),
-    UNIQUE(unit),
-    UNIQUE(truncation)
-    );
-
 CREATE TABLE IF NOT EXISTS public.recipe_ingredients
 (
     id_recipe integer NOT NULL,
     id_ingredient_name integer NOT NULL,
-    id_ingredient_unit integer NOT NULL,
-    id_ingredient_quantity integer NOT NULL
-);
+    ingredient_amount character varying(255) COLLATE pg_catalog."default" NOT NULL
+    );
 
 CREATE TABLE IF NOT EXISTS public.recipes
 (
@@ -51,23 +32,6 @@ ALTER TABLE IF EXISTS public.recipe_ingredients
        ON DELETE NO ACTION
         NOT VALID;
 
-
-ALTER TABLE IF EXISTS public.recipe_ingredients
-    ADD CONSTRAINT ingredient_quantity_id FOREIGN KEY (id_ingredient_quantity)
-    REFERENCES public.ingredient_quantities (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-       ON DELETE NO ACTION
-        NOT VALID;
-
-
-ALTER TABLE IF EXISTS public.recipe_ingredients
-    ADD CONSTRAINT ingredient_unit_id FOREIGN KEY (id_ingredient_unit)
-    REFERENCES public.ingredient_units (id) MATCH SIMPLE
-    ON UPDATE NO ACTION
-       ON DELETE NO ACTION
-        NOT VALID;
-
-
 ALTER TABLE IF EXISTS public.recipe_ingredients
     ADD CONSTRAINT recipe_id FOREIGN KEY (id_recipe)
     REFERENCES public.recipes (id) MATCH SIMPLE
@@ -76,10 +40,8 @@ ALTER TABLE IF EXISTS public.recipe_ingredients
         NOT VALID;
 
 CREATE VIEW view_recipe_ingredients AS
-SELECT recipes.id, ingredient_quantities.quantity, ingredient_units.unit, ingredient_names.name
-FROM ((((recipe_ingredients
+SELECT recipes.id, ingredient_names.name, recipe_ingredients.ingredient_amount
+FROM ((recipe_ingredients
     left join recipes on recipe_ingredients.id_recipe = recipes.id)
-    left join ingredient_quantities on recipe_ingredients.id_ingredient_quantity = ingredient_quantities.id)
-    left join ingredient_units on recipe_ingredients.id_ingredient_unit = ingredient_units.id)
     left join ingredient_names on recipe_ingredients.id_ingredient_name = ingredient_names.id);
 

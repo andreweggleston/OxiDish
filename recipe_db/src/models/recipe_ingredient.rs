@@ -1,5 +1,14 @@
 pub struct RecipeIngredient {
     pub id_recipe: i32,
-    pub id_ingredient_name: String,
-    pub id_ingredient_amount: String,
+    pub ingredient: Ingredient,
+}
+
+pub struct Ingredient {
+    pub id_ingredient_name: i32,
+    pub ingredient_amount: String,
+}
+
+pub struct IngredientName {
+    pub id: i32,
+    pub name: String,
 }
