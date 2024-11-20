@@ -15,7 +15,7 @@ function start_db {
     echo "Initializing PostgreSQL database..."
     initdb --username=postgres --encoding=UTF8 "$PGDATA"
     pg_ctl -D "$PGDATA" -o "-k /tmp" -l "$PGDATA/logfile" start
-    psql -U postgres -c "CREATE ROLE $POSTGRES_USER WITH LOGIN PASSWORD '$POSTGRES_PASSWORD';"
+    psql -U postgres -c "CREATE ROLE $POSTGRES_USER WITH LOGIN PASSWORD '$POSTGRES_PASSWORD' SUPERUSER;"
     psql -U postgres -c "CREATE DATABASE $POSTGRES_DBNAME;"
     psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE $POSTGRES_DBNAME TO $POSTGRES_USER;"
     psql -U postgres -d $POSTGRES_DBNAME -c "GRANT ALL ON SCHEMA public TO $POSTGRES_USER;"
