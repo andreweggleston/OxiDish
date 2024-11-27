@@ -38,6 +38,7 @@
             rust-toolchain
             pkgs.postgresql
             pkgs.sqlx-cli
+            pkgs.pgadmin4-desktopmode
           ];
 
           shellHook = ''
