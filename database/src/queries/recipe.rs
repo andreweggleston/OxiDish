@@ -29,8 +29,7 @@ pub async fn get_recipe_by_id(pool: &PgPool, recipe_id: i32) -> Result<Option<Re
         recipe_description: String,
 
         // ingredients are optional because there might be a recipe with no ingredients!
-        id_ingredient_name: Option<i32>, // not sure if this should be included, might make API
-        // design cleaner
+        id_ingredient_name: Option<i32>, //might not need to include this
         ingredient_name: Option<String>,
         ingredient_amount: Option<String>,
     }
