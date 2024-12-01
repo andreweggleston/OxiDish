@@ -1,6 +1,6 @@
 use database::queries::recipe::get_recipe_by_id;
 
-#[sqlx::test(fixtures("fixtures/ingredient_names.sql", "fixtures/recipes.sql"))]
+#[sqlx::test(fixtures("ingredient_names", "recipes"))]
 async fn test_get_recipe_by_id_where_id_exists(pool: sqlx::PgPool) -> sqlx::Result<()> {
     let recipe = get_recipe_by_id(&pool, 1).await?;
     assert!(recipe.is_some());
@@ -20,7 +20,7 @@ async fn test_get_recipe_by_id_where_id_exists(pool: sqlx::PgPool) -> sqlx::Resu
     Ok(())
 }
 
-#[sqlx::test(fixtures("fixtures/ingredient_names.sql", "fixtures/recipes.sql"))]
+#[sqlx::test(fixtures("ingredient_names", "recipes"))]
 async fn test_get_recipe_by_id_where_id_not_exists(pool: sqlx::PgPool) -> sqlx::Result<()> {
     let recipe = get_recipe_by_id(&pool, 55224).await?; // nonsense id
                                                         // number
