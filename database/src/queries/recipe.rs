@@ -22,6 +22,27 @@ pub struct NewRecipe {
                                                           // added before the new recipe is created
 }
 
+pub async fn search_recipes(pool: &PgPool, search_query: &str) -> Result<Vec<RecipeRow>> {
+    let rows = sqlx::query_as!(
+        RecipeRow,
+        r#"
+        SELECT id, title, description FROM recipes
+        WHERE
+            search_tsvector @@ plainto_tsquery('english', $1) OR
+            title % $1 OR
+            description % $1
+        ORDER BY
+            ts_rank(search_tsvector, plainto_tsquery('english', $1)) DESC,
+            GREATEST(similarity(title, $1), similarity(description, $1)) DESC
+        "#,
+        search_query
+    )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows)
+}
+
 pub async fn get_recipe_by_id(pool: &PgPool, recipe_id: i32) -> Result<Option<RecipeResponse>> {
     struct RecipeViewRow {
         recipe_id: i32,

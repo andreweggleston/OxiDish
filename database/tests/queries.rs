@@ -1,4 +1,4 @@
-use database::queries::recipe::get_recipe_by_id;
+use database::queries::recipe::{get_recipe_by_id, search_recipes};
 
 #[sqlx::test(fixtures("ingredient_names", "recipes"))]
 async fn test_get_recipe_by_id_where_id_exists(pool: sqlx::PgPool) -> sqlx::Result<()> {
@@ -25,5 +25,35 @@ async fn test_get_recipe_by_id_where_id_not_exists(pool: sqlx::PgPool) -> sqlx::
     let recipe = get_recipe_by_id(&pool, 55224).await?; // nonsense id
                                                         // number
     assert!(recipe.is_none());
+    Ok(())
+}
+
+#[sqlx::test(fixtures("ingredient_names", "recipes"))]
+async fn test_search_recipes_by_name_exact_title_name(pool: sqlx::PgPool) -> sqlx::Result<()> {
+    let search_query = "Pasta Bolognese";
+    let recipes = search_recipes(&pool, search_query).await?;
+    assert!(recipes.len() > 0);
+    assert!(recipes
+        .into_iter()
+        .filter_map(|r| {
+            if r.title == search_query {
+                Some(r.title)
+            } else {
+                None
+            }
+        })
+        .collect::<String>()
+        .contains(search_query));
+    Ok(())
+}
+
+#[sqlx::test(fixtures("ingredient_names", "recipes"))]
+async fn test_search_recipes_by_name_fuzzy_title_name(pool: sqlx::PgPool) -> sqlx::Result<()> {
+    let search_query = "psta bolognese";
+
+    let recipes = search_recipes(&pool, search_query).await?;
+    assert!(recipes.len() > 0);
+    assert!(recipes.get(0).unwrap().title == "Pasta Bolognese");
+
     Ok(())
 }
